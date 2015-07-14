@@ -191,7 +191,7 @@ class CloudTrailAlarm
     # now set the role policy to allow cloudtrail access
     @iam.put_role_policy(
             # required
-            role_name: "DELETE_CloudTrail_CloudWatchLogs_Role_#{@random}",
+            role_name: "CloudTrail_CloudWatchLogs_Role_#{@random}",
             # required
             policy_name: "AllowCloudTrailCloudwatchAccess",
             # required
@@ -203,7 +203,7 @@ class CloudTrailAlarm
 
   def create_cloudtrail(bucket_name, cloudwatch_log_hash, account_id)
     # Wait 10 seconds for the IAM policy to propagate
-    sleep 10
+    sleep 30
     # create a cloudtrail with the name of the region and the account ID and our random value
     name = "#{$region}-#{account_id}-#{@random}"
     puts cloudwatch_log_hash
