@@ -62,7 +62,7 @@ class CloudTrailAlarm
     roles = @iam.get_account_authorization_details(filter: ["Role"])
     # parse out the account ID
     account_id = /(?<=arn:aws:iam::)(.{1,12})/.match(roles.role_detail_list.first.arn)
-    puts "The account ID for the current credentials is #{account_id}"
+    puts "The account ID for the current credentials is #{account_id}"quit
     return account_id
   end
   
@@ -129,10 +129,10 @@ class CloudTrailAlarm
   def create_cloudtrail_cloudwatch_log(account_id)
     # This creates a single cloudwatch log group 
     @cloudwatchlogs.create_log_group(
-          log_group_name: "CloudTrail_#{@random}/logs",
+          log_group_name: "CloudTrail/logs",
         )
     # pull the ARN
-    log_group = @cloudwatchlogs.describe_log_groups(log_group_name_prefix: "CloudTrail_#{@random}/logs")
+    log_group = @cloudwatchlogs.describe_log_groups(log_group_name_prefix: "CloudTrail/logs")
     log_group = log_group.log_groups.first.arn
     puts "Cloudwatch log group CloudTrail_#{@random}/logs created"
 
@@ -164,7 +164,7 @@ class CloudTrailAlarm
                   "logs:CreateLogStream"
                 ],
                 "Resource": [
-                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail_#{@random}/logs:log-stream:#{account_id}_CloudTrail_#{@random}_#{$region}*"
+                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail/logs:log-stream:#{account_id}_CloudTrail_#{$region}*"
                 ]
 
               },
@@ -175,14 +175,14 @@ class CloudTrailAlarm
                   "logs:PutLogEvents"
                 ],
                 "Resource": [
-                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail_#{@random}/logs:log-stream:#{account_id}_CloudTrail_#{@random}_#{$region}*"
+                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail/logs:log-stream:#{account_id}_CloudTrail_#{$region}*"
                 ]
               }
             ]
           }>
     # create the required IAM role and set the assume role policy
     role = @iam.create_role(
-            role_name: "CloudTrail_CloudWatchLogs_Role_#{@random}",
+            role_name: "DELETE_CloudTrail_CloudWatchLogs_Role",
             assume_role_policy_document: assume_role_policy,
           )
     cloudwatch_log_hash = {}
@@ -191,7 +191,7 @@ class CloudTrailAlarm
     # now set the role policy to allow cloudtrail access
     @iam.put_role_policy(
             # required
-            role_name: "CloudTrail_CloudWatchLogs_Role_#{@random}",
+            role_name: "DELETE_CloudTrail_CloudWatchLogs_Role",
             # required
             policy_name: "AllowCloudTrailCloudwatchAccess",
             # required
@@ -203,10 +203,9 @@ class CloudTrailAlarm
 
   def create_cloudtrail(bucket_name, cloudwatch_log_hash, account_id)
     # Wait 10 seconds for the IAM policy to propagate
-    sleep 30
-    # create a cloudtrail with the name of the region and the account ID and our random value
-    name = "#{$region}-#{account_id}-#{@random}"
-    puts cloudwatch_log_hash
+    sleep 10
+    # create a cloudtrail with the name of the region and the account ID
+    name = "#{$region}-#{account_id}"
     trail = @cloudtrail.create_trail(
               name: name,
               s3_bucket_name: bucket_name,
@@ -228,7 +227,7 @@ class CloudTrailAlarm
     # This creates a new topic and sets the subscription to the provided email address
     # you could easily convert it to send to SMS, SQS, http, or another destination
     topic = @sns.create_topic(
-                name: "cloudtrail_#{@random}",
+                name: "cloudtrail",
               )
     puts "SNS topic cloudtrail_#{@random} created to send notifications."
     @sns.subscribe(
@@ -254,7 +253,7 @@ class CloudTrailAlarm
     # Creates the filter we will use to alarm on. The name is currently hard coded for CloudTrail.
     @cloudwatchlogs.put_metric_filter(
                       # required
-                      log_group_name: "CloudTrail_#{@random}/logs",
+                      log_group_name: "CloudTrail/logs",
                       # required
                       filter_name: filter_name,
                       # required
@@ -265,12 +264,13 @@ class CloudTrailAlarm
                           # required
                           metric_name: filter_name,
                           # required
-                          metric_namespace: "CloudTrailMetrics_#{@random}",
+                          metric_namespace: "CloudTrailMetrics",
                           # required
                           metric_value: "1",
                         },
                       ],
                     )
+    puts "CloudWatch Logs filter #{filter_name}_#{@random} created."
   end
 
   def create_cloudwatch_cloudtrail_alarm(filter_name, topic_arn)
@@ -284,7 +284,7 @@ class CloudTrailAlarm
                 # required
                 metric_name: filter_name,
                 # required
-                namespace: "CloudTrailMetrics_#{@random}",
+                namespace: "CloudTrailMetrics",
                 # required
                 statistic: "Sum",
                 # required
