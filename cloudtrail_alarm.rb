@@ -203,7 +203,7 @@ class CloudTrailAlarm
 
   def create_cloudtrail(bucket_name, cloudwatch_log_hash, account_id)
     # Wait 10 seconds for the IAM policy to propagate
-    sleep 10
+    sleep 20
     # create a cloudtrail with the name of the region and the account ID and our random value
     name = "#{$region}-#{account_id}-#{@random}"
     trail = @cloudtrail.create_trail(
