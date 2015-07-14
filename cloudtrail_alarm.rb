@@ -182,7 +182,7 @@ class CloudTrailAlarm
           }>
     # create the required IAM role and set the assume role policy
     role = @iam.create_role(
-            role_name: "DELETE_CloudTrail_CloudWatchLogs_Role",
+            role_name: "CloudTrail_CloudWatchLogs_Role_#{@random}",
             assume_role_policy_document: assume_role_policy,
           )
     cloudwatch_log_hash = {}
