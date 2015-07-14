@@ -5,10 +5,10 @@
 # Copyright Securosis, LLC 2015 
 
 require "rubygems"
-require 'bundler/setup'
+# require 'bundler/setup'
 require "aws-sdk"
 require "json"
-require "pry"
+# require "pry"
 
 class CloudTrailAlarm
   def initialize
@@ -19,11 +19,11 @@ class CloudTrailAlarm
     
     # Load from config file in same directory as code
     # In the future, we will need to adjust this to rotate through all accounts and regions for the user. AssumeRole should help.
-    config = JSON.load(File.read('config.json'))
+    # config = JSON.load(File.read('config.json'))
     $region = "us-east-1"
     #  credentials... using hard coded for this PoC, but really should be an assumerole in the future.
     
-    creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
+    # creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
     # Create clients for the various services we need. Loading them all here and setting them as Class variables.
     @ec2 = Aws::EC2::Client.new(region: "#{$region}")
     # hard code s3 to us standard region or some calls will later fail
@@ -57,11 +57,11 @@ class CloudTrailAlarm
     return bucket_name
   end
   
-  def get_account_id
-    # pull creds for the current user, the account ID will be in the result
-    user = @iam.get_user()
+  def get_account_id()
+    # pull creds for the account, the account ID will be in the result
+    roles = @iam.get_account_authorization_details(filter: ["Role"])
     # parse out the account ID
-    account_id = /(?<=arn:aws:iam::)(.{1,12})/.match(user.user.arn)
+    account_id = /(?<=arn:aws:iam::)(.{1,12})/.match(roles.role_detail_list.first.arn)
     puts "The account ID for the current credentials is #{account_id}"
     return account_id
   end
@@ -129,10 +129,10 @@ class CloudTrailAlarm
   def create_cloudtrail_cloudwatch_log(account_id)
     # This creates a single cloudwatch log group 
     @cloudwatchlogs.create_log_group(
-          log_group_name: "CloudTrail/logs",
+          log_group_name: "CloudTrail_#{@random}/logs",
         )
     # pull the ARN
-    log_group = @cloudwatchlogs.describe_log_groups(log_group_name_prefix: "CloudTrail/logs")
+    log_group = @cloudwatchlogs.describe_log_groups(log_group_name_prefix: "CloudTrail_#{@random}/logs")
     log_group = log_group.log_groups.first.arn
     puts "Cloudwatch log group CloudTrail_#{@random}/logs created"
 
@@ -164,7 +164,7 @@ class CloudTrailAlarm
                   "logs:CreateLogStream"
                 ],
                 "Resource": [
-                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail/logs:log-stream:#{account_id}_CloudTrail_#{$region}*"
+                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail_#{@random}/logs:log-stream:#{account_id}_CloudTrail_#{@random}_#{$region}*"
                 ]
 
               },
@@ -175,7 +175,7 @@ class CloudTrailAlarm
                   "logs:PutLogEvents"
                 ],
                 "Resource": [
-                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail/logs:log-stream:#{account_id}_CloudTrail_#{$region}*"
+                  "arn:aws:logs:#{$region}:#{account_id}:log-group:CloudTrail_#{@random}/logs:log-stream:#{account_id}_CloudTrail_#{@random}_#{$region}*"
                 ]
               }
             ]
@@ -204,9 +204,8 @@ class CloudTrailAlarm
   def create_cloudtrail(bucket_name, cloudwatch_log_hash, account_id)
     # Wait 10 seconds for the IAM policy to propagate
     sleep 10
-    binding.pry
-    # create a cloudtrail with the name of the region and the account ID
-    name = "#{$region}-#{account_id}"
+    # create a cloudtrail with the name of the region and the account ID and our random value
+    name = "#{$region}-#{account_id}-#{@random}"
     trail = @cloudtrail.create_trail(
               name: name,
               s3_bucket_name: bucket_name,
@@ -228,7 +227,7 @@ class CloudTrailAlarm
     # This creates a new topic and sets the subscription to the provided email address
     # you could easily convert it to send to SMS, SQS, http, or another destination
     topic = @sns.create_topic(
-                name: "cloudtrail",
+                name: "cloudtrail_#{@random}",
               )
     puts "SNS topic cloudtrail_#{@random} created to send notifications."
     @sns.subscribe(
@@ -254,7 +253,7 @@ class CloudTrailAlarm
     # Creates the filter we will use to alarm on. The name is currently hard coded for CloudTrail.
     @cloudwatchlogs.put_metric_filter(
                       # required
-                      log_group_name: "CloudTrail/logs",
+                      log_group_name: "CloudTrail_#{@random}/logs",
                       # required
                       filter_name: filter_name,
                       # required
@@ -265,13 +264,12 @@ class CloudTrailAlarm
                           # required
                           metric_name: filter_name,
                           # required
-                          metric_namespace: "CloudTrailMetrics",
+                          metric_namespace: "CloudTrailMetrics_#{@random}",
                           # required
                           metric_value: "1",
                         },
                       ],
                     )
-    puts "CloudWatch Logs filter #{filter_name}_#{@random} created."
   end
 
   def create_cloudwatch_cloudtrail_alarm(filter_name, topic_arn)
@@ -285,7 +283,7 @@ class CloudTrailAlarm
                 # required
                 metric_name: filter_name,
                 # required
-                namespace: "CloudTrailMetrics",
+                namespace: "CloudTrailMetrics_#{@random}",
                 # required
                 statistic: "Sum",
                 # required
