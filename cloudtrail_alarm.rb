@@ -206,6 +206,7 @@ class CloudTrailAlarm
     sleep 20
     # create a cloudtrail with the name of the region and the account ID and our random value
     name = "#{$region}-#{account_id}-#{@random}"
+    puts cloudwatch_log_hash
     trail = @cloudtrail.create_trail(
               name: name,
               s3_bucket_name: bucket_name,
