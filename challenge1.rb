@@ -4,7 +4,7 @@
 # Install the listed gems.
 
 require "rubygems"
-require 'aws-sdk-core'
+require 'aws-sdk'
 require "json"
 
 # class for incident resposne functions like quarantine.
@@ -15,13 +15,12 @@ class Challenge1
     # Load configuration and credentials from a JSON file. Right now hardcoded to config.json in the app drectory.
     # Note that we use the same configuration file for multiple code snippet files, but this will only pull what you need.
     
-    configfile = File.read('config.json')
-    config = JSON.parse(configfile)
+    # configfile = File.read('config.json')
+    # config = JSON.parse(configfile)
     
-    Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
+    # Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
     
     @@ec2 = Aws::EC2::Client.new
-    # @@ec2 = Aws.ec2
   end
   
   def list

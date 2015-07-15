@@ -4,7 +4,7 @@
 # Install the listed gems.
 
 require "rubygems"
-require 'aws-sdk-core'
+require 'aws-sdk'
 require "json"
 
 # class for incident response functions like quarantine.
@@ -13,8 +13,8 @@ class IncidentResponse
     @instance_id = instance_id
     
     # Load configuration and credentials from a JSON file. Right now hardcoded to config.json in the app drectory.
-    configfile = File.read('config.json')
-    config = JSON.parse(configfile)
+    # configfile = File.read('config.json')
+    # config = JSON.parse(configfile)
     
     @QuarantineGroup = "#{config["aws"]["RegionSettings"]["us-west-2"]["QuarantineSecurityGroup"]}"
     @ForensicsAMI = "#{config["aws"]["RegionSettings"]["us-west-2"]["AMI"]}"
@@ -22,10 +22,9 @@ class IncidentResponse
     @ForensicsSSHKey = "#{config["aws"]["RegionSettings"]["us-west-2"]["SSHKey"]}"
     @ForensicsUser = "#{config["aws"]["RegionSettings"]["us-west-2"]["User"]}"
     
-    Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
+    # Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
     
     @@ec2 = Aws::EC2.new
-    @@ec2 = Aws.ec2
   end
   
   def quarantine

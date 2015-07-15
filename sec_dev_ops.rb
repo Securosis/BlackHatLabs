@@ -10,14 +10,13 @@
 
 
 require "rubygems"
-require 'bundler/setup'
+# require 'bundler/setup'
 require "aws-sdk"
-require 'aws-sdk-core'
 require "json"
 require 'open-uri'
 require 'netaddr'
 require 'ridley'
-require 'pry'
+# require 'pry'
 
 class ConfigManagement
   # This class integrates with Chef for configuration management. Right now it only has one method.
@@ -31,7 +30,7 @@ class ConfigManagement
     # In the future, we will need to adjust this to rotate through all accounts and regions for the user. AssumeRole should help.
     config = JSON.load(File.read('config.json'))
     #  credentials... using hard coded for this PoC, but really should be an assumerole in the future.
-    creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
+    # creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
     # Create clients for the various services we need. Loading them all here and setting them as Class variables.
     @ec2 = Aws::EC2::Client.new(credentials: creds, region: "#{$region}")
 
@@ -83,7 +82,7 @@ class IncidentResponse
     # Load configuration and credentials from a JSON file. Right now hardcoded to config.json in the app drectory
     config = JSON.load(File.read('config.json'))
     #  credentials... using hard coded for this PoC, but really should be an assumerole in the future.
-    creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
+    # creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
     # Create clients for the various services we need. Loading them all here and setting them as Class variables.
     @ec2 = Aws::EC2::Client.new(credentials: creds, region: "#{$region}")
 

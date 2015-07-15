@@ -62,7 +62,7 @@ class CloudTrailAlarm
     roles = @iam.get_account_authorization_details(filter: ["Role"])
     # parse out the account ID
     account_id = /(?<=arn:aws:iam::)(.{1,12})/.match(roles.role_detail_list.first.arn)
-    puts "The account ID for the current credentials is #{account_id}"quit
+    puts "The account ID for the current credentials is #{account_id}"
     return account_id
   end
   
