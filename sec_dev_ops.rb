@@ -1,5 +1,5 @@
 # SecDevOps Toolkit code by rmogull@securosis.com
-# Copyright 2014 Rich Mogull and Securosis, LLC. with a Creative Commons Attribution, NonCommercial, Share Alike license- http://creativecommons.org/licenses/by-nc-sa/4.0/
+# Copyright 2016 Rich Mogull and Securosis, LLC. with a Creative Commons Attribution, NonCommercial, Share Alike license- http://creativecommons.org/licenses/by-nc-sa/4.0/
 
 # These code samples are meant to accompany Securosis SecDevOps, CCSK, and other training programs and workshops.
 # This is not a complete, functional application.
@@ -10,14 +10,22 @@
 
 
 require "rubygems"
-# require 'bundler/setup'
 require "aws-sdk"
 require "json"
 require 'open-uri'
 require 'netaddr'
-require 'ridley'
+
+# Optional- only needed if you set up a Chef server
+# require 'ridley'
+
+# Optional if you want to use pry for debugging
 # require 'pry'
 
+# The class below is only useful/needed if you have installed a Chef server per other lab instructions.
+# This is from an older lab that is no longer directly supported, but should still work.
+# Remove the "=begin" and "=end" to uncomment the block.
+
+=begin
 class ConfigManagement
   # This class integrates with Chef for configuration management. Right now it only has one method.
   def analyze
@@ -75,16 +83,24 @@ class ConfigManagement
   end
 end
 
+=end
 
 # class for incident response functions like quarantine.
 class IncidentResponse
   def initialize()
     # Load configuration and credentials from a JSON file. Right now hardcoded to config.json in the app drectory
     config = JSON.load(File.read('config.json'))
-    #  credentials... using hard coded for this PoC, but really should be an assumerole in the future.
+
+    # set the credentials based on the configuration file. Use this code if you are not running
+    # on an isntance with an IAM role
     # creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
+    
     # Create clients for the various services we need. Loading them all here and setting them as Class variables.
-    @ec2 = Aws::EC2::Client.new(credentials: creds, region: "#{$region}")
+    # Uncomment and use the next line if pulling credentials from the configuration file
+    # @ec2 = Aws::EC2::Client.new(credentials: creds, region: "#{$region}")
+    
+    # The next line will set the client when running on an instance with an IAM role set
+    @ec2 = Aws::EC2::Client.new(region: "#{$region}")
 
     # Set application configuration variables.
     # Remember that not all AWS services are available in all regions. Everything in this version of the tool should work.
@@ -439,12 +455,21 @@ class IncidentResponse
 
         # Load configuration and credentials from a JSON file. Right now hardcoded to config.json in the app drectory.
         config = JSON.load(File.read('config.json'))
-        #  credentials... using hard coded for this PoC, but really should be an assumerole in the future.
+
+        # Uncomment the lines below to pull credentials from the config file and set the service clients. Otherwise the IAM role is used.
+=begin
         creds = Aws::Credentials.new("#{config["aws"]["AccessKey"]}", "#{config["aws"]["SecretKey"]}")
         # Create clients for the various services we need. Loading them all here and setting them as Class variables.
         @ec2 = Aws::EC2::Client.new(credentials: creds, region: "#{$region}")
         @@autoscaling = Aws::AutoScaling::Client.new(credentials: creds, region: "#{$region}")
         @@loadbalance = elasticloadbalancing = Aws::ElasticLoadBalancing::Client.new(credentials: creds, region: "#{$region}")
+=end
+        # Created needed service endpoints using the IAM role assigned to the instance the code is running on
+        
+        @ec2 = Aws::EC2::Client.new(region: "#{$region}")
+        @@autoscaling = Aws::AutoScaling::Client.new(region: "#{$region}")
+        @@loadbalance = elasticloadbalancing = Aws::ElasticLoadBalancing::Client.new(region: "#{$region}")
+        
         # Load the analysis rules
         @@rules = JSON.load(File.read('analysis_rules.json'))
       end

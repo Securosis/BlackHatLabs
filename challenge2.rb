@@ -24,7 +24,7 @@ class IncidentResponse
     
     # Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
     
-    @@ec2 = Aws::EC2.new
+    @@ec2 = Aws::EC2.new(region: "#{$region}")
   end
   
   def quarantine
@@ -197,3 +197,4 @@ class IncidentResponse
   
 end
 
+$region = "us-west-2"

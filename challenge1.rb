@@ -1,5 +1,5 @@
 # This material was created by rmogull@securosis.com for the Black Hat trainings run by Securosis.
-# Copyright 2014 Rich Mogull and Securosis, LLC. with a Creative Commons Attribution, NonCommercial, Share Alike license- http://creativecommons.org/licenses/by-nc-sa/4.0/
+# Copyright 2016 Rich Mogull and Securosis, LLC. with a Creative Commons Attribution, NonCommercial, Share Alike license- http://creativecommons.org/licenses/by-nc-sa/4.0/
 
 # Install the listed gems.
 
@@ -20,7 +20,7 @@ class Challenge1
     
     # Aws.config = { access_key_id: "#{config["aws"]["AccessKey"]}", secret_access_key: "#{config["aws"]["SecretKey"]}", region: "us-west-2" }
     
-    @@ec2 = Aws::EC2::Client.new
+    @@ec2 = Aws::EC2::Client.new(region: "#{$region}")
   end
   
   def list
@@ -58,5 +58,7 @@ class Challenge1
     data  = @@ec2.describe_instances(instance_ids: ["#{@instance_id}"])
   
   end
+  
+  $region = "us-west-2"
   
   
