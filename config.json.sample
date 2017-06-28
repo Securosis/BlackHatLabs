@@ -5,14 +5,14 @@
 		"SecretKey": "your secret key",
 		"DefaultRegion": "us-west-2", 
 		"RegionSettings": {
-			"us-west-1":{
+			"us-west-2":{
 				"QuarantineSecurityGroup": "sg-xxx",
 				"AnalysisSecurityGroup": "sg-xxx",
 				"SSHKey":  "host key",
 				"User": "ec2-user **replace if you want, this is amazon Linux default user**",
 				"AMI":  "ami-ccf297fc **replace if you want, this is amazon Linux AMI**"
 				},
-			"us-west-1":{
+			"us-west-2":{
 				"QuarantineSecurityGroup": "sg-xxx",
 				"AnalysisSecurityGroup": "sg-xxx",
 				"SSHKey":  "host key",
